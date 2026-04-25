@@ -3,178 +3,296 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vynce - Home</title>
+<title>Vynce - Home Dashboard</title>
 
 <style>
-  /* iOS SYSTEM FONTS & RESET */
+  /* ================= GLOBALS & FONTS ================= */
   * { 
     margin: 0; padding: 0; box-sizing: border-box; 
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
   }
 
   body {
-    height: 100vh;
     background: #000000;
-    display: flex; justify-content: center; align-items: center;
-    overflow: hidden; color: white;
+    color: white;
+    overflow-x: hidden;
+    padding-bottom: 100px; /* Space for the bottom player */
   }
 
-  /* PREMIUM BACKGROUND GLOW */
-  .wrapper { position: relative; z-index: 2; width: 100%; display: flex; justify-content: center; }
-  .wrapper::before {
-    content: ""; position: absolute; inset: -10px; border-radius: 32px;
-    background: linear-gradient(45deg, #7000ff, #00d4ff, #ff00cc, #7000ff);
-    background-size: 300% 300%; filter: blur(30px); opacity: 0.35;
-    animation: animateGlow 10s ease infinite; z-index: -1;
-    width: 380px; height: 100%; top: 0; left: 50%; transform: translateX(-50%);
-  }
-  @keyframes animateGlow {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(0, 212, 255, 0.5); }
+
+  /* ================= BACKGROUND AURA ================= */
+  .bg-aura {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none;
+    background: radial-gradient(circle at 15% 50%, rgba(112, 0, 255, 0.15), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(0, 212, 255, 0.15), transparent 25%),
+                radial-gradient(circle at 50% 80%, rgba(255, 0, 204, 0.1), transparent 30%);
   }
 
-  /* GLASSMORPHISM CARD */
-  .card {
-    position: relative; width: 380px; max-width: 92vw;
-    padding: 50px 35px; border-radius: 28px;
-    background: rgba(18, 18, 22, 0.65);
-    backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
-    border: 1px solid rgba(255, 255, 255, 0.08); border-top: 1px solid rgba(255, 255, 255, 0.15);
-    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9);
-    z-index: 2; overflow: hidden; text-align: center;
-    display: none; /* Hidden until auth state is verified */
-    flex-direction: column; align-items: center;
-    animation: fadeUp 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
-  }
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+  /* ================= TOP NAVIGATION ================= */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px 40px;
+    background: rgba(18, 18, 22, 0.8);
+    backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   }
 
-  /* BRAND & TEXT */
-  h1.brand {
-    font-size: 2.8rem; font-weight: 800; margin-bottom: 10px; letter-spacing: 0.5px;
+  .nav-left { display: flex; align-items: center; gap: 30px; }
+  
+  .logo {
+    font-size: 1.8rem; font-weight: 800; letter-spacing: 1px;
     background: linear-gradient(45deg, #00d4ff, #ff00cc);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   }
 
-  .welcome-subtitle {
-    font-size: 1.1rem; color: #8e8ca6; font-weight: 400; margin-bottom: 5px;
+  .search-box {
+    position: relative; display: flex; align-items: center; width: 300px;
+  }
+  .search-box svg {
+    position: absolute; left: 15px; width: 18px; height: 18px; stroke: #8e8ca6; stroke-width: 2; fill: none;
+  }
+  .search-box input {
+    width: 100%; padding: 10px 15px 10px 45px;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05); border-radius: 50px;
+    color: white; font-size: 0.9rem; outline: none; transition: 0.3s;
+  }
+  .search-box input:focus {
+    background: rgba(0,0,0,0.5); border-color: rgba(0, 212, 255, 0.4); box-shadow: 0 0 15px rgba(0,212,255,0.1);
   }
 
-  #userName {
-    font-size: 1.5rem; font-weight: 600; color: #ffffff; margin-bottom: 40px;
-    word-break: break-all;
+  .nav-right { display: flex; align-items: center; gap: 20px; }
+  .greeting { font-size: 1rem; font-weight: 500; color: #d1d1e0; }
+  .greeting span { color: white; font-weight: 700; }
+  
+  .logout-btn {
+    padding: 8px 20px; border: 1px solid rgba(255, 50, 80, 0.4); border-radius: 50px;
+    background: transparent; color: #ff4d6d; font-weight: 600; cursor: pointer; transition: 0.3s;
+  }
+  .logout-btn:hover { background: rgba(255, 50, 80, 0.15); transform: translateY(-2px); }
+
+  /* ================= MAIN CONTENT & GRID ================= */
+  main { padding: 40px; }
+  .section-title { font-size: 1.8rem; font-weight: 700; margin-bottom: 25px; letter-spacing: 0.5px; }
+
+  .grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 25px;
   }
 
-  /* LOGOUT BUTTON */
-  button.logout-btn {
-    width: 100%; padding: 16px; border: 1px solid rgba(255, 50, 80, 0.3); border-radius: 14px;
-    background: rgba(255, 50, 80, 0.1);
-    color: #ff4d6d; font-size: 1.05rem; font-weight: 600; letter-spacing: 0.5px; cursor: pointer;
-    transition: all 0.3s ease; display: flex; justify-content: center; align-items: center;
+  /* GLASSMORPHISM CARDS */
+  .card {
+    background: rgba(25, 25, 30, 0.4); padding: 18px; border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.05); cursor: pointer; position: relative;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
-  button.logout-btn:hover {
-    background: rgba(255, 50, 80, 0.25); border-color: rgba(255, 50, 80, 0.5);
-    transform: translateY(-2px); box-shadow: 0 10px 20px rgba(255, 50, 80, 0.15);
+  .card:hover {
+    background: rgba(35, 35, 40, 0.6); transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.1);
   }
-  button.logout-btn:active { transform: translateY(1px); }
 
-  /* FULL SCREEN LOADER */
-  #loader {
-    position: fixed; inset: 0; display: flex; justify-content: center; align-items: center;
-    background: #000000; z-index: 9999; color: white; font-weight: 500; font-size: 1.1rem;
-    flex-direction: column; gap: 15px; transition: opacity 0.5s ease;
+  .card-img {
+    width: 100%; aspect-ratio: 1; border-radius: 10px; object-fit: cover;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5); margin-bottom: 15px;
   }
-  .spinner {
-    width: 30px; height: 30px; border: 3px solid rgba(255,255,255,0.2);
-    border-radius: 50%; border-top-color: #00d4ff; animation: spin 1s ease-in-out infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
 
+  /* Spotify-like Play Button on Hover */
+  .play-btn-overlay {
+    position: absolute; right: 25px; top: 120px; width: 45px; height: 45px;
+    background: linear-gradient(135deg, #00d4ff, #ff00cc); border-radius: 50%;
+    display: flex; justify-content: center; align-items: center;
+    opacity: 0; transform: translateY(10px); transition: all 0.3s ease;
+    box-shadow: 0 8px 15px rgba(0,0,0,0.5);
+  }
+  .card:hover .play-btn-overlay { opacity: 1; transform: translateY(0); }
+  .play-btn-overlay svg { width: 20px; height: 20px; fill: white; margin-left: 3px; }
+
+  .song-title { font-size: 1.05rem; font-weight: 700; color: white; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .artist-name { font-size: 0.85rem; color: #8e8ca6; font-weight: 500; }
+
+  /* ================= BOTTOM MUSIC PLAYER ================= */
+  footer {
+    position: fixed; bottom: 0; left: 0; width: 100vw; height: 90px;
+    background: rgba(15, 15, 18, 0.85); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+    border-top: 1px solid rgba(255, 255, 255, 0.05); z-index: 1000;
+    display: flex; justify-content: space-between; align-items: center; padding: 0 30px;
+  }
+
+  .player-left { display: flex; align-items: center; gap: 15px; width: 25%; }
+  .player-left img { width: 56px; height: 56px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+  .player-left div h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 2px; }
+  .player-left div p { font-size: 0.8rem; color: #8e8ca6; }
+
+  .player-center { display: flex; flex-direction: column; align-items: center; width: 50%; max-width: 600px; }
+  .player-controls { display: flex; align-items: center; gap: 25px; margin-bottom: 8px; }
+  .player-controls svg { width: 20px; height: 20px; fill: #d1d1e0; cursor: pointer; transition: 0.2s; }
+  .player-controls svg:hover { fill: white; }
+  
+  .play-circle {
+    width: 36px; height: 36px; background: white; border-radius: 50%;
+    display: flex; justify-content: center; align-items: center; transition: 0.2s;
+  }
+  .play-circle:hover { transform: scale(1.05); }
+  .play-circle svg { fill: black; width: 18px; height: 18px; margin-left: 2px; }
+  
+  .progress-container { width: 100%; display: flex; align-items: center; gap: 10px; font-size: 0.75rem; color: #8e8ca6; }
+  .progress-bar { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; cursor: pointer; display: flex; align-items: center; }
+  .progress-fill { width: 35%; height: 100%; background: linear-gradient(90deg, #ff00cc, #00d4ff); border-radius: 2px; position: relative; }
+  .progress-fill::after {
+    content: ""; position: absolute; right: -5px; top: -3px; width: 10px; height: 10px;
+    background: white; border-radius: 50%; opacity: 0; transition: 0.2s;
+  }
+  .progress-bar:hover .progress-fill::after { opacity: 1; }
+
+  .player-right { display: flex; align-items: center; justify-content: flex-end; gap: 15px; width: 25%; }
+  .player-right svg { width: 18px; height: 18px; fill: #8e8ca6; cursor: pointer; }
+
+  /* ================= RESPONSIVE ================= */
+  @media (max-width: 768px) {
+    .search-box { display: none; }
+    .player-left, .player-right { display: none; }
+    .player-center { width: 100%; }
+    nav { padding: 15px 20px; }
+    main { padding: 20px; }
+  }
 </style>
 </head>
 <body>
 
-<div id="loader">
-  <div class="spinner"></div>
-  Authenticating...
-</div>
+<div class="bg-aura"></div>
 
-<div class="wrapper">
-  <div class="card" id="mainCard">
-    <h1 class="brand">Vynce</h1>
-    <p class="welcome-subtitle">Welcome to Vynce 🎧</p>
-    <h2 id="userName">...</h2>
-
-    <button id="logoutBtn" class="logout-btn">
-      <svg style="width: 20px; height: 20px; margin-right: 10px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;" viewBox="0 0 24 24">
-        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-        <polyline points="16 17 21 12 16 7"></polyline>
-        <line x1="21" y1="12" x2="9" y2="12"></line>
-      </svg>
-      Log Out
-    </button>
+<nav>
+  <div class="nav-left">
+    <div class="logo">Vynce</div>
+    <div class="search-box">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="What do you want to listen to?">
+    </div>
   </div>
-</div>
+  <div class="nav-right">
+    <div class="greeting">Welcome back, <span id="userName">Pjmask</span></div>
+    <button class="logout-btn" id="logoutBtn">Log Out</button>
+  </div>
+</nav>
+
+<main>
+  <h2 class="section-title">Trending Songs 🔥</h2>
+  <div class="grid" id="songGrid">
+    </div>
+</main>
+
+<footer>
+  <div class="player-left">
+    <img src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=200&auto=format&fit=crop" alt="Album Art" id="currentCover">
+    <div>
+      <h4 id="currentTitle">Midnight City</h4>
+      <p id="currentArtist">M83</p>
+    </div>
+  </div>
+
+  <div class="player-center">
+    <div class="player-controls">
+      <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+      <div class="play-circle" id="playPauseBtn">
+        <svg viewBox="0 0 24 24" id="playIcon"><path d="M8 5v14l11-7z"/></svg>
+      </div>
+      <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+    </div>
+    <div class="progress-container">
+      <span>1:12</span>
+      <div class="progress-bar">
+        <div class="progress-fill"></div>
+      </div>
+      <span>4:03</span>
+    </div>
+  </div>
+
+  <div class="player-right">
+    <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+  </div>
+</footer>
+
+<script>
+  // DUMMY SONGS DATA
+  const songs = [
+    { title: "Starboy", artist: "The Weeknd", img: "https://images.unsplash.com/photo-1619983081563-430f63602796?q=80&w=300&auto=format&fit=crop" },
+    { title: "Blinding Lights", artist: "The Weeknd", img: "https://images.unsplash.com/photo-1493225457124-a1a2a5956093?q=80&w=300&auto=format&fit=crop" },
+    { title: "Levitating", artist: "Dua Lipa", img: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=300&auto=format&fit=crop" },
+    { title: "As It Was", artist: "Harry Styles", img: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=300&auto=format&fit=crop" },
+    { title: "Heat Waves", artist: "Glass Animals", img: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=300&auto=format&fit=crop" },
+    { title: "Stay", artist: "The Kid LAROI", img: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=300&auto=format&fit=crop" },
+    { title: "Industry Baby", artist: "Lil Nas X", img: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=300&auto=format&fit=crop" },
+    { title: "Peaches", artist: "Justin Bieber", img: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?q=80&w=300&auto=format&fit=crop" }
+  ];
+
+  // RENDER GRID
+  const grid = document.getElementById('songGrid');
+  songs.forEach(song => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <img src="${song.img}" class="card-img" alt="${song.title}">
+      <div class="play-btn-overlay">
+        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+      </div>
+      <div class="song-title">${song.title}</div>
+      <div class="artist-name">${song.artist}</div>
+    `;
+    grid.appendChild(card);
+  });
+
+  // PLAY/PAUSE UI TOGGLE
+  const playPauseBtn = document.getElementById('playPauseBtn');
+  let isPlaying = false;
+  playPauseBtn.addEventListener('click', () => {
+    isPlaying = !isPlaying;
+    if(isPlaying) {
+      playPauseBtn.innerHTML = '<svg viewBox="0 0 24 24" style="margin-left:0;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>'; // Pause Icon
+    } else {
+      playPauseBtn.innerHTML = '<svg viewBox="0 0 24 24" style="margin-left:2px;"><path d="M8 5v14l11-7z"/></svg>'; // Play Icon
+    }
+  });
+</script>
 
 <script type="module">
-  // 1. IMPORT FIREBASE MODULES (v10.8.1)
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-  // 2. FIREBASE CONFIGURATION
   const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_BUCKET",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyBDl09_jFonJ7_gNZn3fFAGDr-skBuINL0",
+    authDomain: "vynce-9ad6d.firebaseapp.com",
+    projectId: "vynce-9ad6d",
+    storageBucket: "vynce-9ad6d.firebasestorage.app",
+    messagingSenderId: "1073970262788",
+    appId: "1:1073970262788:web:f28c95ba620f42bafcd651",
+    measurementId: "G-1R1M3QVZ7R"
   };
 
-  // 3. INITIALIZE FIREBASE
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
 
-  // 4. DOM ELEMENTS
-  const loader = document.getElementById('loader');
-  const mainCard = document.getElementById('mainCard');
-  const userNameEl = document.getElementById('userName');
-  const logoutBtn = document.getElementById('logoutBtn');
-
-  // 5. AUTHENTICATION STATE OBSERVER
+  // PROTECT ROUTE
   onAuthStateChanged(auth, (user) => {
     if (user) {
-      // User is signed in -> Update UI & Hide Loader
-      const displayName = user.displayName || user.email;
-      userNameEl.textContent = displayName;
-      
-      loader.style.opacity = '0';
-      setTimeout(() => {
-        loader.style.display = 'none';
-        mainCard.style.display = 'flex';
-      }, 500);
-
+      document.getElementById('userName').textContent = user.displayName || user.email.split('@')[0];
     } else {
-      // No user is signed in -> Redirect to index.html
       window.location.href = "index.html";
     }
   });
 
-  // 6. LOGOUT LOGIC
-  logoutBtn.addEventListener("click", async () => {
+  // LOGOUT
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
     try {
       await signOut(auth);
-      // Redirect handled by onAuthStateChanged listener automatically
     } catch (error) {
-      console.error("Error signing out: ", error);
-      alert("Failed to log out. Please try again.");
+      alert("Error logging out.");
     }
   });
 </script>
 
 </body>
 </html>
-
